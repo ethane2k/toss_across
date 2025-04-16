@@ -5,6 +5,7 @@
 #define LED_STRIP 25
 #define LITE_BRITE 26
 
+BluetoothSerial SerialBT;
 bool solved = 0;
 
 // Any additional library inclusions, variables, etc. can be put here. Ensure that variable names do not collide with variable names from escapeos.h and do not include libraries already included in escapeos.h
@@ -32,8 +33,8 @@ void setup() {
   
   Serial.begin(115200);
 
-  SerialBT.begin("ESP32_Receriver"); 
-  Serial.println("ESP32_Receriver ready, waiting for connection");
+  SerialBT.begin("ESP32_Receiver"); 
+  Serial.println("ESP32_Receiver ready, waiting for connection");
   
   // EXAMPLE for initial verification after upload. This will cause the board to send the achieveCheckpoint message once after connecting to WiFi
   serialln("Sending achieve checkpoint message once at the end of setup");
@@ -52,7 +53,7 @@ void loop() {
   // For any RFID puzzles, do not use the UUID pre-loaded onto RFID tags. Write a string to the RFID tag's first memory block and have your puzzle read these blocks instead of UUID to determine behavior
 
   if (SerialBT.available()){
-    String received = SerialBT.readStringUntil('\n);
+    String received = SerialBT.readStringUntil('\n');
     received.trim();
     
       if(received == "TRIGGER"){
