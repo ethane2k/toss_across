@@ -1,13 +1,10 @@
 #include "escapeos.h"
 #include "blinker.h"
+#include "BluetoothSerial.h"
 
 #define LED_STRIP 25
 #define LITE_BRITE 26
 
-uint8_t numInputs = 3;
-uint8_t inputPins[] = {12, 14, 27};
-uint8_t inputStates[] = {0, 0, 0};
-bool andFlag = 0;
 bool solved = 0;
 
 // Any additional library inclusions, variables, etc. can be put here. Ensure that variable names do not collide with variable names from escapeos.h and do not include libraries already included in escapeos.h
@@ -33,12 +30,11 @@ void setup() {
   pinMode(LED_STRIP, OUTPUT);
   pinMode(LITE_BRITE, OUTPUT);
   
-  for(uint8_t i = 0; i < numInputs; i++){
-    pinMode(inputPins[i], INPUT_PULLUP);
-  }
-  
   Serial.begin(115200);
 
+  SerialBT.begin("ESP32_Receriver"); 
+  Serial.println("ESP32_Receriver ready, waiting for connection");
+  
   // EXAMPLE for initial verification after upload. This will cause the board to send the achieveCheckpoint message once after connecting to WiFi
   serialln("Sending achieve checkpoint message once at the end of setup");
   achieveCheckpoint();
@@ -55,29 +51,12 @@ void loop() {
   // Debounce any input that should be debounced (such as buttons/reed switch input). This prevents the signal from being sent multiple times for one button press
   // For any RFID puzzles, do not use the UUID pre-loaded onto RFID tags. Write a string to the RFID tag's first memory block and have your puzzle read these blocks instead of UUID to determine behavior
 
-  for(uint8_t i = 0; i < numInputs; i++){
-    inputStates[i] = !digitalRead(inputPins[i]);
-  }
-  andFlag = 0;
-  for(uint8_t i = 0; i < numInputs; i++){
-    if(digitalRead(inputPins[i]) == 0){
-      andFlag = 1;
-    }
-  }
-//  digitalWrite(LITE_BRITE, !andFlag);
-//  digitalWrite(LED_STRIP, !andFlag);
-
-   for(uint8_t i = 0; i < numInputs; i++){
-       Serial.print(inputStates[i]);
-       Serial.print(" ");
-   }
-   Serial.print("\n");
-   Serial.print("andFlag: ");
-   Serial.print(andFlag);
-
-   if(inputStates[0] == 1 && inputStates[1] == 1 && inputStates[2] == 1){
-      delay(500);
-      if(inputStates[0] == 1 && inputStates[1] == 1 && inputStates[2] == 1){
+  if (SerialBT.available()){
+    String received = SerialBT.readStringUntil('\n);
+    received.trim();
+    
+      if(received == "TRIGGER"){
+        Serial.println("Received: TRIGGER");
         digitalWrite(LITE_BRITE, 1);
         digitalWrite(LED_STRIP, 1);
         solved = true;
